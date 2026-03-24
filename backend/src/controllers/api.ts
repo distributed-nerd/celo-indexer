@@ -1,117 +1,121 @@
 import express, { Request, Response } from 'express';
-import TransferQueryService from './db'
+import TransferQueryService from './db';
+import { parseQueryOptions } from '../types';
+import { validateAccount } from '../utils/validateAddress';
 
 const router = express.Router();
 
-interface QueryOptions {
-  limit?: number;
-  offset?: number;
-  sortBy?: string;
-  sortDir?: 'ASC' | 'DESC';
+/** Validate an Ethereum address param and return 400 if invalid */
+function requireValidAddress(address: string, res: Response): boolean {
+  if (!validateAccount(address)) {
+    res.status(400).json({ success: false, error: `Invalid Ethereum address: ${address}` });
+    return false;
+  }
+  return true;
 }
-
-
-
-const parseQueryOptions = (query: any): QueryOptions => {
-    let sortDir: 'ASC' | 'DESC' | undefined;
-  
-    if (typeof query.sortDir === 'string') {
-      const dir = query.sortDir.toUpperCase();
-      if (dir === 'ASC' || dir === 'DESC') {
-        sortDir = dir;
-      }
-    }
-  
-    return {
-      limit: query.limit ? parseInt(query.limit) : 100,
-      offset: query.offset ? parseInt(query.offset) : 0,
-      sortBy: typeof query.sortBy === 'string' ? query.sortBy : 'timestamp',
-      sortDir,
-    };
-  };
-
 
 /**
  * GET /api/transfers/:address
- * Get all transfers involving an address (both sent and received)
+ * All transfers involving an address (sent or received)
  */
 router.get('/transfers/:address', async (req: Request, res: Response) => {
+  const { address } = req.params;
+  if (!requireValidAddress(address, res)) return;
   try {
-    const address: string = req.params.address;
-    const options = parseQueryOptions(req.query);
-
-    const transfers = await TransferQueryService.getTransfersByAddress(address, options);
+    const transfers = await TransferQueryService.getTransfersByAddress(address, parseQueryOptions(req.query));
     res.json({ success: true, data: transfers, count: transfers.length });
   } catch (error: any) {
-    console.error('API error:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
 /**
  * GET /api/transfers/:address/from
- * Get transfers sent from an address
+ * Transfers sent from an address
  */
 router.get('/transfers/:address/from', async (req: Request, res: Response) => {
+  const { address } = req.params;
+  if (!requireValidAddress(address, res)) return;
   try {
-    const address: string = req.params.address;
-    const options = parseQueryOptions(req.query);
-
-    const transfers = await TransferQueryService.getTransfersFrom(address, options);
+    const transfers = await TransferQueryService.getTransfersFrom(address, parseQueryOptions(req.query));
     res.json({ success: true, data: transfers, count: transfers.length });
   } catch (error: any) {
-    console.error('API error:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
 /**
  * GET /api/transfers/:address/to
- * Get transfers received by an address
+ * Transfers received by an address
  */
 router.get('/transfers/:address/to', async (req: Request, res: Response) => {
+  const { address } = req.params;
+  if (!requireValidAddress(address, res)) return;
   try {
-    const address: string = req.params.address;
-    const options = parseQueryOptions(req.query);
-
-    const transfers = await TransferQueryService.getTransfersTo(address, options);
+    const transfers = await TransferQueryService.getTransfersTo(address, parseQueryOptions(req.query));
     res.json({ success: true, data: transfers, count: transfers.length });
   } catch (error: any) {
-    console.error('API error:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
 /**
- * GET /api/tokens/:tokenAddress/transfers
- * Get transfers for a specific token 0xdac17f958d2ee523a2206206994597c13d831ec7
+ * GET /api/baseindex/:address
+ * Transfers for a specific token contract address
  */
 router.get('/baseindex/:address', async (req: Request, res: Response) => {
+  const { address } = req.params;
+  if (!requireValidAddress(address, res)) return;
   try {
-    const tokenAddress: string = req.params.address;
-    const options = parseQueryOptions(req.query);
-
-    const transfers = await TransferQueryService.getTransfersByToken(tokenAddress, options);
+    const transfers = await TransferQueryService.getTransfersByToken(address, parseQueryOptions(req.query));
     res.json({ success: true, data: transfers, count: transfers.length });
   } catch (error: any) {
-    console.error('API error:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
 /**
  * GET /api/addresses/:address/tokens/:tokenAddress/transfers
- * Get transfers for a specific address and token
+ * Transfers for a specific address filtered by token
  */
 router.get('/addresses/:address/tokens/:tokenAddress/transfers', async (req: Request, res: Response) => {
+  const { address, tokenAddress } = req.params;
+  if (!requireValidAddress(address, res)) return;
+  if (!requireValidAddress(tokenAddress, res)) return;
   try {
-    const { address, tokenAddress } = req.params;
-    const options = parseQueryOptions(req.query);
-
-    const transfers = await TransferQueryService.getTransfersByAddressAndToken(address, tokenAddress, options);
+    const transfers = await TransferQueryService.getTransfersByAddressAndToken(
+      address,
+      tokenAddress,
+      parseQueryOptions(req.query)
+    );
     res.json({ success: true, data: transfers, count: transfers.length });
   } catch (error: any) {
-    console.error('API error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * GET /api/transfers/recent
+ * Most recent transfers regardless of address
+ */
+router.get('/transfers/recent', async (req: Request, res: Response) => {
+  try {
+    const transfers = await TransferQueryService.getRecentTransfers(parseQueryOptions(req.query));
+    res.json({ success: true, data: transfers, count: transfers.length });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * GET /api/stats
+ * Real aggregate stats from the database
+ */
+router.get('/stats', async (_req: Request, res: Response) => {
+  try {
+    const total = await TransferQueryService.getTotalCount();
+    res.json({ success: true, data: { totalTransfers: total } });
+  } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
   }
 });

@@ -1,164 +1,96 @@
 import TransferEvent from '../models/TransferEvent';
 import { Op } from 'sequelize';
+import { QueryOptions } from '../types';
 
-interface QueryOptions {
-  limit?: number;
-  offset?: number;
-  sortBy?: string;
-  sortDir?: 'ASC' | 'DESC';
+const DEFAULT_OPTS: Required<QueryOptions> = {
+  limit: 100,
+  offset: 0,
+  sortBy: 'timestamp',
+  sortDir: 'DESC',
+};
+
+function resolveOpts(options: QueryOptions): Required<QueryOptions> {
+  return { ...DEFAULT_OPTS, ...options };
 }
 
-/**
- * Service to query transfer events by address
- */
 class TransferQueryService {
-  /**
-   * Get all transfers involving a specific address (either as sender or receiver)
-   */
-  async getTransfersByAddress(
-    address: string,
-    options: QueryOptions = {}
-  ): Promise<any[]> {
-    const {
-      limit = 100,
-      offset = 0,
-      sortBy = 'timestamp',
-      sortDir = 'DESC',
-    } = options;
-
-    try {
-      const transfers = await TransferEvent.findAll({
-        where: {
-          [Op.or]: [
-            { from: address.toLowerCase() },
-            { to: address.toLowerCase() },
-          ],
-        },
-        order: [[sortBy, sortDir]],
-        limit,
-        offset,
-      });
-
-      return transfers;
-    } catch (error) {
-      console.error('Error querying transfers:', error);
-      throw error;
-    }
+  /** All transfers involving an address (sent or received) */
+  async getTransfersByAddress(address: string, options: QueryOptions = {}): Promise<any[]> {
+    const { limit, offset, sortBy, sortDir } = resolveOpts(options);
+    const addr = address.toLowerCase();
+    return TransferEvent.findAll({
+      where: { [Op.or]: [{ from: addr }, { to: addr }] },
+      order: [[sortBy, sortDir]],
+      limit,
+      offset,
+    });
   }
 
-  /**
-   * Get transfers where the address is the sender
-   */
-  async getTransfersFrom(
-    address: string,
-    options: QueryOptions = {}
-  ): Promise<any[]> {
-    const {
-      limit = 100,
-      offset = 0,
-      sortBy = 'timestamp',
-      sortDir = 'DESC',
-    } = options;
-
-    try {
-      return await TransferEvent.findAll({
-        where: { from: address.toLowerCase() },
-        order: [[sortBy, sortDir]],
-        limit,
-        offset,
-      });
-    } catch (error) {
-      console.error('Error querying outgoing transfers:', error);
-      throw error;
-    }
+  /** Transfers sent from an address */
+  async getTransfersFrom(address: string, options: QueryOptions = {}): Promise<any[]> {
+    const { limit, offset, sortBy, sortDir } = resolveOpts(options);
+    return TransferEvent.findAll({
+      where: { from: address.toLowerCase() },
+      order: [[sortBy, sortDir]],
+      limit,
+      offset,
+    });
   }
 
-  /**
-   * Get transfers where the address is the receiver
-   */
-  async getTransfersTo(
-    address: string,
-    options: QueryOptions = {}
-  ): Promise<any[]> {
-    const {
-      limit = 100,
-      offset = 0,
-      sortBy = 'timestamp',
-      sortDir = 'DESC',
-    } = options;
-
-    try {
-      return await TransferEvent.findAll({
-        where: { to: address.toLowerCase() },
-        order: [[sortBy, sortDir]],
-        limit,
-        offset,
-      });
-    } catch (error) {
-      console.error('Error querying incoming transfers:', error);
-      throw error;
-    }
+  /** Transfers received by an address */
+  async getTransfersTo(address: string, options: QueryOptions = {}): Promise<any[]> {
+    const { limit, offset, sortBy, sortDir } = resolveOpts(options);
+    return TransferEvent.findAll({
+      where: { to: address.toLowerCase() },
+      order: [[sortBy, sortDir]],
+      limit,
+      offset,
+    });
   }
 
-  /**
-   * Get transfers for a specific token address
-   */
-  async getTransfersByToken(
-    tokenAddress: string,
-    options: QueryOptions = {}
-  ): Promise<any[]> {
-    const {
-      limit = 100,
-      offset = 0,
-      sortBy = 'timestamp',
-      sortDir = 'DESC',
-    } = options;
-
-    try {
-      return await TransferEvent.findAll({
-        where: { tokenAddress: tokenAddress.toLowerCase() },
-        order: [[sortBy, sortDir]],
-        limit,
-        offset,
-      });
-    } catch (error) {
-      console.error('Error querying token transfers:', error);
-      throw error;
-    }
+  /** Transfers for a specific token contract */
+  async getTransfersByToken(tokenAddress: string, options: QueryOptions = {}): Promise<any[]> {
+    const { limit, offset, sortBy, sortDir } = resolveOpts(options);
+    return TransferEvent.findAll({
+      where: { tokenAddress: tokenAddress.toLowerCase() },
+      order: [[sortBy, sortDir]],
+      limit,
+      offset,
+    });
   }
 
-  /**
-   * Get transfers by address and token
-   */
+  /** Transfers for a specific address filtered by token */
   async getTransfersByAddressAndToken(
     address: string,
     tokenAddress: string,
     options: QueryOptions = {}
   ): Promise<any[]> {
-    const {
-      limit = 100,
-      offset = 0,
-      sortBy = 'timestamp',
-      sortDir = 'DESC',
-    } = options;
+    const { limit, offset, sortBy, sortDir } = resolveOpts(options);
+    const addr = address.toLowerCase();
+    return TransferEvent.findAll({
+      where: {
+        [Op.or]: [{ from: addr }, { to: addr }],
+        tokenAddress: tokenAddress.toLowerCase(),
+      },
+      order: [[sortBy, sortDir]],
+      limit,
+      offset,
+    });
+  }
 
-    try {
-      return await TransferEvent.findAll({
-        where: {
-          [Op.or]: [
-            { from: address.toLowerCase() },
-            { to: address.toLowerCase() },
-          ],
-          tokenAddress: tokenAddress.toLowerCase(),
-        },
-        order: [[sortBy, sortDir]],
-        limit,
-        offset,
-      });
-    } catch (error) {
-      console.error('Error querying transfers by address and token:', error);
-      throw error;
-    }
+  /** Most recent transfers regardless of address */
+  async getRecentTransfers(options: QueryOptions = {}): Promise<any[]> {
+    const { limit, offset, sortBy, sortDir } = resolveOpts(options);
+    return TransferEvent.findAll({
+      order: [[sortBy, sortDir]],
+      limit,
+      offset,
+    });
+  }
+
+  /** Total count of indexed transfers */
+  async getTotalCount(): Promise<number> {
+    return TransferEvent.count();
   }
 }
 
