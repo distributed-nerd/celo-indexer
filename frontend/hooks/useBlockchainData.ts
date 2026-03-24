@@ -1,315 +1,121 @@
 import { useState, useEffect, useCallback } from 'react';
+import { getRecentTransfers, getStats } from '../lib/api';
 
-// Define interfaces for our blockchain data
-export interface Transaction {
-  id: string | number;
-  hash?: string;
+export interface TransferEvent {
+  id: number | string;
   from: string;
   to: string;
   value: string;
-  tokenAddress?: string;
-  blockNumber?: number;
+  tokenAddress: string;
+  blockNumber: number;
+  txHash: string;
+  logIndex: number;
   timestamp: string | Date;
-  status?: 'success' | 'failed' | 'pending';
-  gasUsed?: number;
-  gasPrice?: string;
 }
 
-export interface Block {
-  id?: string;
-  number: number | string;
-  hash: string;
-  timestamp: string | Date;
-  transactions: number;
-  validator: string;
-  gasUsed: string;
+export interface IndexerStats {
+  totalTransfers: number;
+  uniqueTokens: number;
+  uniqueSenders: number;
+  uniqueReceivers: number;
+  latestBlock: number | null;
 }
 
-// Helper to generate realistic ETH values
-const generateRandomEthValue = () => {
-  // Generate values between 0.001 and 5 ETH with varying decimal places
-  const baseValue = Math.random() * 5;
-  // 20% chance of a larger transaction (5-50 ETH)
-  if (Math.random() > 0.8) {
-    return (Math.random() * 45 + 5).toFixed(4);
-  }
-  
-  // 10% chance of a small transaction (< 0.01 ETH)
-  if (Math.random() > 0.9) {
-    return (Math.random() * 0.01).toFixed(6);
-  }
-  
-  // Standard transaction
-  return baseValue.toFixed(4);
-};
-
-// Hook for indexer control
+/** Poll the indexer status endpoint */
 export function useIndexerControl() {
-  const [isRunning, setIsRunning] = useState(true); // Default to running
-  const [indexerLoading, setIndexerLoading] = useState(false);
+  const [isRunning, setIsRunning] = useState<boolean>(true);
   const [indexerError, setIndexerError] = useState<string | null>(null);
 
-  // Check indexer status
   const checkIndexerStatus = useCallback(async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/indexer/status`);
-      if (!response.ok) throw new Error('Failed to check indexer status');
-      const data = await response.json();
-      setIsRunning(data.isRunning);
-      return data.isRunning;
-    } catch (error) {
-      console.error('Error checking indexer status:', error);
-      return true; // Default to running if check fails
-    }
-  }, []);
-
-  // Start indexer function - keeping it for compatibility but not exposing in UI
-  const startIndexer = useCallback(async () => {
-    setIndexerLoading(true);
-    setIndexerError(null);
-    try {
-      const response = await fetch('${process.env.NEXT_PUBLIC_BACKEND_API_URL}/indexer/start', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to start indexer');
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/`);
+      if (res.ok) {
+        setIsRunning(true);
+        setIndexerError(null);
+      } else {
+        setIsRunning(false);
       }
-      
-      const data = await response.json();
-      setIsRunning(data.isRunning || true);
-      return true;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error starting indexer';
-      setIndexerError(errorMessage);
-      console.error('Indexer start error:', errorMessage);
-      return false;
-    } finally {
-      setIndexerLoading(false);
+    } catch {
+      setIsRunning(false);
+      setIndexerError('Cannot reach indexer backend');
     }
   }, []);
 
-  // Check indexer status on component mount
   useEffect(() => {
     checkIndexerStatus();
-    // Set up a periodic check every 30 seconds
-    const intervalId = setInterval(checkIndexerStatus, 30000);
-    return () => clearInterval(intervalId);
+    const id = setInterval(checkIndexerStatus, 30_000);
+    return () => clearInterval(id);
   }, [checkIndexerStatus]);
 
-  return { isRunning, startIndexer, indexerLoading, indexerError, checkIndexerStatus };
+  return { isRunning, indexerError, checkIndexerStatus };
 }
 
-// Hook for recent transactions with manual refresh function
+/** Fetch recent transfers from the real backend */
 export function useRecentTransactions(limit = 10) {
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [transactions, setTransactions] = useState<TransferEvent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Function to fetch transactions that can be called on demand
   const refreshTransactions = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
-      // First try to fetch from our backend API
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/transactions/recent?limit=${limit}`);
-      
-      if (!response.ok) {
-        throw new Error(`Failed to fetch transactions: ${response.status}`);
+      const result = await getRecentTransfers({ limit });
+      if (result.success) {
+        setTransactions(result.data as unknown as TransferEvent[]);
+      } else {
+        setError(result.error ?? 'Failed to fetch transactions');
       }
-      
-      const data = await response.json();
-      
-      // Transform the data to match our Transaction interface
-      const transformedData: Transaction[] = data.map((tx: any) => ({
-        id: tx.id || `tx-${Math.random().toString(16).substring(2, 8)}`,
-        hash: tx.hash || tx.id, 
-        from: tx.from,
-        to: tx.to,
-        value: tx.value,
-        tokenAddress: tx.tokenAddress,
-        blockNumber: tx.blockNumber,
-        timestamp: tx.timestamp,
-        status: tx.status || 'success'
-      }));
-      
-      setTransactions(transformedData);
-      return transformedData;
-    } catch (error) {
-      console.error('Failed to fetch recent transactions:', error);
-      
-      // Create fallback data for development/testing with realistic ETH values
-      const placeholderTransactions: Transaction[] = Array.from({ length: limit }, (_, i) => ({
-        id: `tx-${i}`,
-        hash: `0x${Math.random().toString(16).substring(2, 66)}`,
-        from: `0x${Math.random().toString(16).substring(2, 42)}`,
-        to: `0x${Math.random().toString(16).substring(2, 42)}`,
-        value: generateRandomEthValue(), // Use the helper function for realistic values
-        tokenAddress: Math.random() > 0.3 ? `0x${Math.random().toString(16).substring(2, 42)}` : undefined,
-        blockNumber: 14000000 - i,
-        timestamp: new Date(Date.now() - i * 15000).toISOString(),
-        status: Math.random() > 0.9 ? (Math.random() > 0.5 ? 'failed' : 'pending') : 'success'
-      }));
-      
-      setTransactions(placeholderTransactions);
-      return placeholderTransactions;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Unknown error';
+      setError(msg);
+      console.error('Failed to fetch recent transactions:', msg);
     } finally {
       setLoading(false);
     }
   }, [limit]);
 
-  // Initial fetch on component mount
   useEffect(() => {
     refreshTransactions();
   }, [refreshTransactions]);
 
-  return { transactions, loading, refreshTransactions };
+  return { transactions, loading, error, refreshTransactions };
 }
 
-// Hook for recent blocks with manual refresh function
-export function useRecentBlocks(limit = 10) {
-  const [blocks, setBlocks] = useState<Block[]>([]);
+/** Fetch real aggregate stats from the backend */
+export function useIndexerStats() {
+  const [stats, setStats] = useState<IndexerStats | null>(null);
   const [loading, setLoading] = useState(true);
-  
-  // Function to fetch blocks that can be called on demand
-  const refreshBlocks = useCallback(async () => {
-    setLoading(true);
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/blocks/recent?limit=${limit}`);
-      
-      if (!response.ok) {
-        throw new Error(`Failed to fetch blocks: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      
-      
-      const formattedBlocks: Block[] = data.map((block: any) => ({
-        number: block.number,
-        hash: block.hash || `0x${Math.random().toString(16).substring(2, 66)}`,
-        timestamp: block.timestamp || new Date().toISOString(),
-        transactions: block.transactions || Math.floor(Math.random() * 100),
-        validator: block.validator || `0x${Math.random().toString(16).substring(2, 42)}`, 
-        gasUsed: block.gasUsed || `${Math.floor(Math.random() * 8000000)}`,
-      }));
-      
-      setBlocks(formattedBlocks);
-      return formattedBlocks;
-    } catch (error) {
-      console.error('Failed to fetch recent blocks:', error);
-      
-      // Fallback data for development/testing
-      const placeholderBlocks: Block[] = Array.from({ length: limit }, (_, i) => ({
-        number: 14000000 - i,
-        hash: `0x${Math.random().toString(16).substring(2, 66)}`,
-        timestamp: new Date(Date.now() - i * 15000).toISOString(),
-        transactions: Math.floor(Math.random() * 100),
-        validator: `0x${Math.random().toString(16).substring(2, 42)}`,
-        gasUsed: `${Math.floor(Math.random() * 8000000)}`,
-      }));
-      
-      setBlocks(placeholderBlocks);
-      return placeholderBlocks;
-    } finally {
-      setLoading(false);
-    }
-  }, [limit]);
-
-  // Initial fetch on component mount
-  useEffect(() => {
-    refreshBlocks();
-  }, [refreshBlocks]);
-
-  return { blocks, loading, refreshBlocks };
-}
-
-// Custom hook for sending targeted queries to the indexer
-export function useIndexerQuery() {
-  const [results, setResults] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const queryAddress = useCallback(async (address: string) => {
+  const refreshStats = useCallback(async () => {
     setLoading(true);
     setError(null);
-    
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/indexer/run`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userMessage: `index this address ${address}`
-        })
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Failed to query address: ${response.status}`);
+      const result = await getStats();
+      if (result.success) {
+        setStats(result.data);
+      } else {
+        setError('Failed to fetch stats');
       }
-      
-      const data = await response.json();
-      
-      if (!data.success) {
-        throw new Error(data.message || 'Query failed');
-      }
-      
-      setResults(data.data || []);
-      return data.data;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error querying address';
-      setError(errorMessage);
-      console.error('Address query error:', errorMessage);
-      return [];
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Unknown error';
+      setError(msg);
+      console.error('Failed to fetch indexer stats:', msg);
     } finally {
       setLoading(false);
     }
   }, []);
 
-  const queryToken = useCallback(async (tokenAddress: string) => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/indexer/run`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userMessage: `index this token ${tokenAddress}`
-        })
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Failed to query token: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      
-      if (!data.success) {
-        throw new Error(data.message || 'Token query failed');
-      }
-      
-      setResults(data.data || []);
-      return data.data;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error querying token';
-      setError(errorMessage);
-      console.error('Token query error:', errorMessage);
-      return [];
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  useEffect(() => {
+    refreshStats();
+  }, [refreshStats]);
 
-  return {
-    results,
-    loading,
-    error,
-    queryAddress,
-    queryToken
-  };
+  return { stats, loading, error, refreshStats };
+}
+
+// Keep useRecentBlocks exported for backward compat — returns empty until
+// a dedicated blocks endpoint is implemented on the backend
+export function useRecentBlocks(_limit = 10) {
+  return { blocks: [], loading: false, refreshBlocks: async () => {} };
 }
