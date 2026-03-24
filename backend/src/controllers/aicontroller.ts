@@ -1,284 +1,178 @@
-import { Response, Request} from "express";
-import OpenAI from "openai";
-import { createAssistant } from "../openai/createAssistant";
-import { createThread } from "../openai/createThread";
-import { performRun } from "../openai/performRunDev";
-import { createRun } from "../openai/createRun";
-import TransferQueryService from  './db'
-// import * as dotenv from "dotenv";
-// import { QueryTypes } from "sequelize";
-import {validateAccount} from "../utils/validateAddress"
-
-interface QueryOptions {
-    limit?: number;
-    offset?: number;
-    sortBy?: string;
-    sortDir?: 'ASC' | 'DESC';
-  }
-  
-  
-  
-  const parseQueryOptions = (query: any): QueryOptions => {
-      let sortDir: 'ASC' | 'DESC' | undefined;
-    
-      if (typeof query.sortDir === 'string') {
-        const dir = query.sortDir.toUpperCase();
-        if (dir === 'ASC' || dir === 'DESC') {
-          sortDir = dir;
-        }
-      }
-    
-      return {
-        limit: query.limit ? parseInt(query.limit) : 100,
-        offset: query.offset ? parseInt(query.offset) : 0,
-        sortBy: typeof query.sortBy === 'string' ? query.sortBy : 'timestamp',
-        sortDir,
-      };
-    };
-  
-
+import { Response, Request } from 'express';
+import OpenAI from 'openai';
+import { createAssistant } from '../openai/createAssistant';
+import { createThread } from '../openai/createThread';
+import { performRun } from '../openai/performRunDev';
+import { createRun } from '../openai/createRun';
+import TransferQueryService from './db';
+import { parseQueryOptions } from '../types';
+import { validateAccount } from '../utils/validateAddress';
 
 export async function runCommand(req: Request, res: Response) {
   const options = parseQueryOptions(req.body);
-  let { userMessage } = req.body;
+  const { userMessage } = req.body;
 
-  if (!userMessage) {
-      return res.status(408).send({
-          success: false,
-          message: "UserMessage field can't be empty"
-      });
+  if (!userMessage || typeof userMessage !== 'string' || userMessage.trim() === '') {
+    return res.status(400).json({
+      success: false,
+      message: "userMessage field is required and cannot be empty",
+    });
   }
-  
-  console.log("User message:", userMessage);
 
   try {
-      const client = new OpenAI();
-      const assistant = await createAssistant(client);
-      const thread = await createThread(client, userMessage);
-      const run = await createRun(client, thread, assistant.id);
+    const client = new OpenAI();
+    const assistant = await createAssistant(client);
+    const thread = await createThread(client, userMessage);
+    const run = await createRun(client, thread, assistant.id);
 
-      let result;
-      const toolCalls = run.required_action?.submit_tool_outputs?.tool_calls;
-      console.log("i am tool calls", toolCalls)
+    const toolCalls = run.required_action?.submit_tool_outputs?.tool_calls;
 
-      if (toolCalls && Array.isArray(toolCalls)) {
+    // ── Path A: AI returned a function call ──────────────────────────────────
+    if (toolCalls && Array.isArray(toolCalls) && toolCalls.length > 0) {
+      const functionCalls = toolCalls.filter((c) => c.type === 'function');
 
-          const functionCalls = toolCalls.filter(call => call.type === "function");
-          
-          if (functionCalls.length > 0) {
-            
-              const parsedFunctions = functionCalls.map(call => {
-                  try {
-                      const functionName = call.function?.name;
-                      const parsedArgs = JSON.parse(call.function?.arguments || "{}");
-                      
-                      return {
-                          id: call.id,
-                          functionName,
-                          arguments: parsedArgs
-                      };
-                  } catch (err) {
-                      console.error("Failed to parse arguments:", err);
-                      return {
-                          id: call.id,
-                          functionName: call.function?.name,
-                          arguments: {},
-                          error: "Failed to parse arguments"
-                      };
-                  }
-              });
-              
-           
-              const toolOutputs = parsedFunctions.map(func => ({
-                  tool_call_id: func.id,
-                  output: JSON.stringify({ success: true, message: "Arguments parsed successfully" })
-              }));
-              
-              await client.beta.threads.runs.submitToolOutputs(
-                  thread.id,
-                  run.id,
-                  { tool_outputs: toolOutputs }
-              );
-              
-             
-              try {
-                  console.log(`Cancelling run ${run.id} on thread ${thread.id} after parsing arguments`);
-                  await client.beta.threads.runs.cancel(thread.id, run.id);
-                  console.log(`✅ Successfully cancelled run ${run.id}`);
-              } catch (cancelError) {
-                  console.error("Failed to cancel run:", cancelError);
-              
-              }
-
-            
-              result = {
-                  type: "functionCalls",
-                  data: parsedFunctions
-              };
-              
-              console.log("✅ Function arguments parsed and returned");
-          } else {
-              
-              console.log("No function calls found, proceeding with regular response");
-              const performRunAction = await performRun(client, thread, run);
-              result = { type: "message", data: performRunAction };
-          }
-      } else {
-         
-          console.log("No tool calls found");
-          const performRunAction = await performRun(client, thread, run);
-          result = { type: "message", data: performRunAction };
-      }
-
-      console.log("I am result", result);
-      
-    
-      let isAddressQuery = false;
-      let address;
-      let informationalResponse;
-      let requestedFields = []; 
-      
-      if (result.type === 'message' && 'text' in result.data && typeof result.data.text?.value === 'string') {
-         
+      if (functionCalls.length > 0) {
+        // Parse all function call arguments
+        const parsedCalls = functionCalls.map((call) => {
           try {
-              const messageContent = result.data.text.value;
-            
-              try {
-                  const parsed = JSON.parse(messageContent);
-             
-                  if (parsed.addresses && Array.isArray(parsed.addresses)) {
-                      address = parsed.addresses[0];
-                      isAddressQuery = true;
-                 
-                      if (parsed.fields && Array.isArray(parsed.fields)) {
-                          requestedFields = parsed.fields;
-                      }
-                  }
-              } catch (jsonError) {
-            
-                  informationalResponse = messageContent;
-              }
-          } catch (parseError) {
-              console.error("Failed to process message content:", parseError);
+            return {
+              id: call.id,
+              functionName: call.function?.name,
+              arguments: JSON.parse(call.function?.arguments || '{}'),
+            };
+          } catch {
+            return { id: call.id, functionName: call.function?.name, arguments: {} };
           }
-      } else if (result.type === 'functionCalls' && Array.isArray(result.data) && result.data.length > 0) {
-    
-          isAddressQuery = true;
-          const functionCall = result.data[0];
-          
-          if (functionCall.arguments && typeof functionCall.arguments === 'object') {
-              const args = functionCall.arguments;
-           
-              address = args.address || 
-                        args.token_address || 
-                        args.tokenAddress;
-             
-              if (!address && args.token) {
-                  address = args.token.address;
-              }
-              
+        });
 
-              if (args.fields && Array.isArray(args.fields)) {
-                  requestedFields = args.fields;
-              } else if (args.returnFields && Array.isArray(args.returnFields)) {
-                  requestedFields = args.returnFields;
-              } else if (typeof args.fields === 'string') {
-              
-                  requestedFields = args.fields.split(',').map((field: string) => field.trim());
-              } else if (typeof args.returnFields === 'string') {
-                  requestedFields = args.returnFields.split(',').map((field: string) => field.trim());
-              }
-              
-             
-              if (args.include) {
-                  if (Array.isArray(args.include)) {
-                      requestedFields = args.include;
-                  } else if (typeof args.include === 'string') {
-                      requestedFields = args.include.split(',').map((field: string) => field.trim());
-                  }
-              }
-          }
-      }
-      
-      
-      if (isAddressQuery) {
-          console.log("Processing as address query. Extracted address:", address);
-          console.log("Requested fields:", requestedFields.length > 0 ? requestedFields : "All fields");
-          
-          let transfers;
-          if (address) {
-            // validate account 
-            let code = validateAccount(address)
-            console.log("Result ===" , code)
+        // Submit dummy tool outputs so the run can be cancelled cleanly
+        await client.beta.threads.runs.submitToolOutputs(thread.id, run.id, {
+          tool_outputs: parsedCalls.map((c) => ({
+            tool_call_id: c.id,
+            output: JSON.stringify({ success: true }),
+          })),
+        });
 
-            
-            if (!validateAccount(address)){
-                console.log("Expect this ")
-                return res.status(401).send({
-                    success: false,
-                    message: `invalid address ${address}`,
-                    queryType: "Account"
+        try {
+          await client.beta.threads.runs.cancel(thread.id, run.id);
+        } catch {
+          // Cancel may fail if run already completed — that's fine
+        }
 
-                })
-            }
-              transfers = await TransferQueryService.getTransfersByToken(address, options);
-              
-              if (!transfers || transfers.length === 0){
+        // Extract address and requested fields from the first function call
+        const args = parsedCalls[0].arguments as Record<string, any>;
+        const address: string | undefined =
+          args.address || args.token_address || args.tokenAddress;
 
-                return res.status(404).send({
+        const requestedFields: string[] = normaliseFields(
+          args.fields ?? args.returnFields ?? args.include
+        );
 
-                    success: false,
-                    message:`No record found for the address ${address}`,
-                    queryType: "address"
-                })
-              }
-              if (requestedFields.length > 0) {
-                  transfers = transfers.map(transfer => {
-                      const filteredTransfer: Record<string, any> = {};
-               
-                      filteredTransfer.id = transfer.id;
-                      
-                      requestedFields.forEach((field: string) => {
-                          if (field in transfer) {
-                              filteredTransfer[field] = transfer[field];
-                          }
-                      });
-                      
-                      return filteredTransfer;
-                  });
-              }
-              
-              const api_endpoint = `${process.env.BASE_URL}/api/baseindex/${address}`;
-              return res.status(200).send({
-                  success: true,
-                  message: "Address query processed successfully",
-                  data: transfers,
-                  queryType: "address",
-                  endPoint: api_endpoint,
-                  fields: requestedFields.length > 0 ? requestedFields : "all"
-              });
-          } else {
-              return res.status(400).send({
-                  success: false,
-                  message: "Address query detected but no valid address found",
-                  queryType: "address"
-              });
-          }
-      } else {
-        
-          console.log("Processing as informational query");
-          
-          return res.status(200).send({
-              success: true,
-              message: "Informational query processed successfully",
-              data: { response: informationalResponse },
-              queryType: "informational"
+        if (!address) {
+          return res.status(400).json({
+            success: false,
+            message: 'Address query detected but no valid address found in AI response',
+            queryType: 'address',
           });
+        }
+
+        if (!validateAccount(address)) {
+          return res.status(400).json({
+            success: false,
+            message: `Invalid Ethereum address: ${address}`,
+            queryType: 'address',
+          });
+        }
+
+        let transfers = await TransferQueryService.getTransfersByToken(address, options);
+
+        if (!transfers || transfers.length === 0) {
+          return res.status(404).json({
+            success: false,
+            message: `No records found for address ${address}`,
+            queryType: 'address',
+          });
+        }
+
+        if (requestedFields.length > 0) {
+          transfers = transfers.map((t: any) => {
+            const filtered: Record<string, any> = { id: t.id };
+            requestedFields.forEach((field) => {
+              if (field in t) filtered[field] = t[field];
+            });
+            return filtered;
+          });
+        }
+
+        const apiEndpoint = `${process.env.BASE_URL}/api/baseindex/${address}`;
+        return res.status(200).json({
+          success: true,
+          message: 'Address query processed successfully',
+          data: transfers,
+          queryType: 'address',
+          endPoint: apiEndpoint,
+          fields: requestedFields.length > 0 ? requestedFields : 'all',
+        });
       }
+    }
+
+    // ── Path B: AI returned a plain text message ──────────────────────────────
+    const messageContent = await performRun(client, thread, run);
+    let informationalResponse: string | undefined;
+
+    if (
+      messageContent &&
+      'text' in messageContent &&
+      typeof (messageContent as any).text?.value === 'string'
+    ) {
+      const raw = (messageContent as any).text.value as string;
+
+      // Try to parse as JSON (some prompts return structured JSON)
+      try {
+        const parsed = JSON.parse(raw);
+        if (parsed.addresses && Array.isArray(parsed.addresses) && parsed.addresses[0]) {
+          const address = parsed.addresses[0] as string;
+          if (!validateAccount(address)) {
+            return res.status(400).json({
+              success: false,
+              message: `Invalid Ethereum address: ${address}`,
+              queryType: 'address',
+            });
+          }
+          const transfers = await TransferQueryService.getTransfersByToken(address, options);
+          return res.status(200).json({
+            success: true,
+            message: 'Address query processed successfully',
+            data: transfers,
+            queryType: 'address',
+            endPoint: `${process.env.BASE_URL}/api/baseindex/${address}`,
+            fields: 'all',
+          });
+        }
+      } catch {
+        // Not JSON — treat as informational text
+        informationalResponse = raw;
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Informational query processed successfully',
+      data: { response: informationalResponse ?? 'No response from assistant' },
+      queryType: 'informational',
+    });
   } catch (error) {
-      return res.status(406).send({
-          success: false,
-          message: (error as Error).message || "Unknown Error"
-      });
+    return res.status(500).json({
+      success: false,
+      message: (error as Error).message || 'Unknown error',
+    });
   }
+}
+
+/** Normalise fields argument which may be an array, comma-separated string, or undefined */
+function normaliseFields(raw: unknown): string[] {
+  if (!raw) return [];
+  if (Array.isArray(raw)) return raw.map(String);
+  if (typeof raw === 'string') return raw.split(',').map((s) => s.trim()).filter(Boolean);
+  return [];
 }
