@@ -1,169 +1,127 @@
 import { useState, useCallback } from 'react';
+import {
+  getTransfersByToken,
+  getTransfersByAddress,
+  getRecentTransfers,
+  runAIQuery,
+  type PaginationQuery,
+} from '../lib/api';
 
-// Improved IndexerControl hook that works with your backend
-export function useIndexerControl() {
-  const [isRunning, setIsRunning] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  // Hook for indexer control 
-  const startIndexer = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/indexer/start`, {
-        method: 'GET'
-      });
-      if (!response.ok) throw new Error('Failed to start indexer');
-      setIsRunning(true);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return { isRunning, loading, error, startIndexer };
-}
+export type { PaginationQuery as QueryOptions };
 
 export interface TransferEvent {
-  id: string;
+  id: number | string;
   from: string;
   to: string;
   value: string;
   tokenAddress: string;
   blockNumber: number;
+  txHash: string;
+  logIndex: number;
   timestamp: string | Date;
   createdAt?: string;
   updatedAt?: string;
 }
 
-export interface QueryOptions {
-  limit?: number;
-  offset?: number;
-  sortBy?: string;
-  sortDir?: 'ASC' | 'DESC';
-}
-
-export interface NetworkStats {
-  tps: number;
-  activeAddresses: number;
-  totalTransactions: number;
-  averageGasPrice: string;
-  marketCap: string;
-}
-
+/**
+ * useIndexer — direct REST calls for known queries.
+ * Only falls back to the AI endpoint for free-form natural language queries.
+ * This avoids unnecessary OpenAI API calls (and cost) for structured lookups.
+ */
 export const useIndexer = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<TransferEvent[]>([]);
 
-  const fetchIndexerData = useCallback(async (query: string, options: QueryOptions = {}) => {
+  const withLoading = useCallback(async <T>(fn: () => Promise<T>): Promise<T | null> => {
     setIsLoading(true);
     setError(null);
-    
     try {
-      // Use the same endpoint URL that works with your AI Assistant
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/indexer/run`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userMessage: query,
-          ...options
-        }),
-      });
-      
-      if (!response.ok) {
-        throw new Error(`API error: ${response.status}`);
-      }
-      
-      const result = await response.json();
-      
-      if (result.success) {
-        return result.data;
-      }
-      throw new Error(result.message || 'Invalid data format');
+      return await fn();
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
-      setError(errorMessage);
-      throw err;
+      const msg = err instanceof Error ? err.message : 'Unknown error';
+      setError(msg);
+      return null;
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  const getTransfersByToken = useCallback(async (
-    tokenAddress: string,
-    options: QueryOptions = {}
-  ) => {
-    try {
-      const data = await fetchIndexerData(`Get transfers for token ${tokenAddress}`, options);
-      setData(Array.isArray(data) ? data : []);
-      return data;
-    } catch (err) {
-      console.error('Error fetching token transfers:', err);
-      return [];
-    }
-  }, [fetchIndexerData]);
+  /** Fetch transfers for a token contract — direct REST, no AI */
+  const fetchByToken = useCallback(
+    async (tokenAddress: string, options: PaginationQuery = {}) => {
+      return withLoading(async () => {
+        const result = await getTransfersByToken(tokenAddress, options);
+        const transfers = (result.data ?? []) as unknown as TransferEvent[];
+        setData(transfers);
+        return transfers;
+      });
+    },
+    [withLoading]
+  );
 
-  const getTransfersByAddress = useCallback(async (
-    address: string,
-    options: QueryOptions = {}
-  ) => {
-    try {
-      const data = await fetchIndexerData(`Get transfers for address ${address}`, options);
-      setData(Array.isArray(data) ? data : []);
-      return data;
-    } catch (err) {
-      console.error('Error fetching address transfers:', err);
-      return [];
-    }
-  }, [fetchIndexerData]);
+  /** Fetch transfers for a wallet address — direct REST, no AI */
+  const fetchByAddress = useCallback(
+    async (address: string, options: PaginationQuery = {}) => {
+      return withLoading(async () => {
+        const result = await getTransfersByAddress(address, options);
+        const transfers = (result.data ?? []) as unknown as TransferEvent[];
+        setData(transfers);
+        return transfers;
+      });
+    },
+    [withLoading]
+  );
 
-  const getRecentTransfers = useCallback(async (
-    options: QueryOptions = {}
-  ) => {
-    try {
-      const data = await fetchIndexerData('Get recent transfers', options);
-      setData(Array.isArray(data) ? data : []);
-      return data;
-    } catch (err) {
-      console.error('Error fetching recent transfers:', err);
-      return [];
-    }
-  }, [fetchIndexerData]);
+  /** Fetch most recent transfers — direct REST, no AI */
+  const fetchRecent = useCallback(
+    async (options: PaginationQuery = {}) => {
+      return withLoading(async () => {
+        const result = await getRecentTransfers(options);
+        const transfers = (result.data ?? []) as unknown as TransferEvent[];
+        setData(transfers);
+        return transfers;
+      });
+    },
+    [withLoading]
+  );
 
-  const getStats = useCallback(async () => {
-    try {
-      const data = await fetchIndexerData('Get network statistics');
-      return {
-        tps: data?.tps || 0,
-        activeAddresses: data?.activeAddresses || 0,
-        totalTransactions: data?.totalTransactions || 0,
-        averageGasPrice: data?.averageGasPrice || '0 gwei',
-        marketCap: data?.marketCap || '$0'
-      } as NetworkStats;
-    } catch (err) {
-      console.error('Error fetching network stats:', err);
-      return {
-        tps: 0,
-        activeAddresses: 0,
-        totalTransactions: 0,
-        averageGasPrice: '0 gwei',
-        marketCap: '$0'
-      } as NetworkStats;
-    }
-  }, [fetchIndexerData]);
+  /**
+   * Free-form natural language query — uses the AI endpoint.
+   * Only call this when the user types an arbitrary command.
+   */
+  const runNaturalLanguageQuery = useCallback(
+    async (query: string) => {
+      return withLoading(async () => {
+        const result = await runAIQuery(query);
+        if (result.success && Array.isArray(result.data)) {
+          setData(result.data as TransferEvent[]);
+        }
+        return result;
+      });
+    },
+    [withLoading]
+  );
 
   return {
     isLoading,
     error,
     data,
-    getTransfersByToken,
-    getTransfersByAddress,
-    getRecentTransfers,
-    getStats,
+    fetchByToken,
+    fetchByAddress,
+    fetchRecent,
+    runNaturalLanguageQuery,
+    // Legacy aliases kept for backward compatibility
+    getTransfersByToken: fetchByToken,
+    getTransfersByAddress: fetchByAddress,
+    getRecentTransfers: fetchRecent,
   };
 };
+
+/** Kept for backward compatibility */
+export function useIndexerControl() {
+  const [isRunning] = useState(true);
+  const [loading] = useState(false);
+  const [error] = useState<string | null>(null);
+  return { isRunning, loading, error, startIndexer: async () => {} };
+}
