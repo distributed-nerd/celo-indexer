@@ -11,7 +11,7 @@ const features = [
   },
   {
     name: 'Real-time Indexing',
-    description: 'Access the latest Base blockchain data with minimal latency. Our indexer processes new blocks and transactions within seconds.',
+    description: 'Access the latest Celo blockchain data with minimal latency. Our indexer processes new blocks and transactions within seconds.',
     icon: RefreshCcw,
   },
   {
@@ -78,7 +78,7 @@ export default function Features() {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="mt-2 text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl"
           >
-            Everything you need to explore the Base ecosystem
+            Everything you need to explore the Celo ecosystem
           </motion.p>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -87,7 +87,7 @@ export default function Features() {
             className="mt-6 text-lg leading-8 text-gray-600 dark:text-gray-400"
           >
             Our AI-powered blockchain indexer combines powerful search capabilities with intelligent 
-            analysis to help you navigate the Base blockchain more effectively than ever before.
+            analysis to help you navigate the Celo blockchain more effectively than ever before.
           </motion.p>
         </div>
         <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">

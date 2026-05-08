@@ -60,12 +60,12 @@ export default function Footer() {
           <div className="space-y-8">
             <div className="flex items-center gap-2">
               <span className="h-8 w-8 rounded-full bg-base-blue-600 flex items-center justify-center">
-                <span className="text-white font-bold">B</span>
+                <span className="text-white font-bold">C</span>
               </span>
-              <span className="text-xl font-semibold text-base-blue-800 dark:text-white">BaseIndexer</span>
+              <span className="text-xl font-semibold text-base-blue-800 dark:text-white">CeloIndexer</span>
             </div>
             <p className="text-sm leading-6 text-gray-600 dark:text-gray-400">
-              The most advanced indexer for Base blockchain with integrated AI tooling.
+              The most advanced indexer for Celo blockchain with integrated AI tooling.
             </p>
             <div className="flex space-x-6">
               {navigation.social.map((item) => (
@@ -145,11 +145,11 @@ export default function Footer() {
         </div>
         <div className="mt-16 border-t border-gray-900/10 dark:border-gray-700 pt-8 flex flex-col sm:flex-row justify-between items-center">
           <p className="text-xs leading-5 text-gray-500 dark:text-gray-400">
-            &copy; {currentYear} BaseIndexer. Built for Base Hackathon. All rights reserved.
+            &copy; {currentYear} CeloIndexer. Built for Celo Hackathon. All rights reserved.
           </p>
           <div className="mt-4 sm:mt-0">
             <p className="text-xs leading-5 text-gray-500 dark:text-gray-400">
-              Powered by Base Network
+              Powered by Celo Network
             </p>
           </div>
         </div>

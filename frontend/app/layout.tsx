@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Indexa – ERC-20 Token Transfer Indexer",
-  description: "AI-powered ERC-20 transfer indexer for the Base blockchain",
+  description: "AI-powered ERC-20 transfer indexer for the Celo blockchain",
 };
 
 export default function RootLayout({

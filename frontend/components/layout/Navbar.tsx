@@ -38,9 +38,9 @@ export default function Navbar() {
         <div className="flex lg:flex-1">
           <Link href="/" className="-m-1.5 p-1.5 flex items-center gap-2">
             <span className="h-8 w-8 rounded-full bg-base-blue-600 flex items-center justify-center">
-              <span className="text-white font-bold">B</span>
+              <span className="text-white font-bold">C</span>
             </span>
-            <span className="text-xl font-semibold text-base-blue-800 dark:text-white">BaseIndexer</span>
+            <span className="text-xl font-semibold text-base-blue-800 dark:text-white">CeloIndexer</span>
           </Link>
         </div>
         
@@ -100,9 +100,9 @@ export default function Navbar() {
             <div className="flex items-center justify-between">
               <Link href="/" className="-m-1.5 p-1.5 flex items-center gap-2">
                 <span className="h-8 w-8 rounded-full bg-base-blue-600 flex items-center justify-center">
-                  <span className="text-white font-bold">B</span>
+                  <span className="text-white font-bold">C</span>
                 </span>
-                <span className="text-xl font-semibold text-base-blue-800 dark:text-white">BaseIndexer</span>
+                <span className="text-xl font-semibold text-base-blue-800 dark:text-white">CeloIndexer</span>
               </Link>
               <button
                 type="button"

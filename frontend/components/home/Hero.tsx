@@ -53,10 +53,10 @@ export default function Hero() {
               transition={{ duration: 0.5 }}
             >
               <span className="rounded-full bg-base-blue-500/10 px-3 py-1 text-sm font-semibold leading-6 text-base-blue-600 dark:text-base-blue-400 ring-1 ring-inset ring-base-blue-500/20">
-                Base Hackathon 2025
+                Celo Hackathon 2025
               </span>
               <span className="inline-flex items-center space-x-2 text-sm font-medium leading-6 text-gray-600 dark:text-gray-400">
-                <span>Built for Base</span>
+                <span>Built for Celo</span>
                 <ArrowRight className="h-4 w-4" />
               </span>
             </motion.div>
@@ -75,7 +75,7 @@ export default function Hero() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.4 }}
           >
-            Explore the Base blockchain with our advanced indexer enhanced with AI capabilities.
+            Explore the Celo blockchain with our advanced indexer enhanced with AI capabilities.
             Query blockchain data using natural language, visualize network activity, and unlock
             deeper insights with intelligent analysis.
           </motion.p>
@@ -128,13 +128,13 @@ export default function Hero() {
                     <div className="w-3 h-3 rounded-full bg-green-500"></div>
                   </div>
                   <div className="flex-1 flex justify-center">
-                    <span className="text-sm text-gray-400">BaseIndexer Explorer</span>
+                    <span className="text-sm text-gray-400">CeloIndexer Explorer</span>
                   </div>
                 </div>
                 <div className="p-6 h-[calc(100%-2.5rem)] overflow-y-auto bg-gradient-to-b from-gray-900 to-gray-950 text-gray-100">
-                  <div className="text-green-400 mb-4">$ baseindexer --launch</div>
+                  <div className="text-green-400 mb-4">$ celoindexer --launch</div>
                   <div className="text-blue-400 mb-4">
-                    <span className="text-gray-400">✓</span> Connected to Base Mainnet
+                    <span className="text-gray-400">✓</span> Connected to Celo Mainnet
                   </div>
                   <div className="mb-4">
                     <div className="text-purple-400">» AI Agent initialized</div>
@@ -153,7 +153,7 @@ export default function Hero() {
                     <div className="flex items-center pl-4 mt-1">
                       <span className="text-gray-500 mr-2">AI&gt;</span>
                       <div className="relative flex-1">
-                        <span className="text-white">Tell me about the latest Base protocol upgrade</span>
+                        <span className="text-white">Tell me about the latest Celo protocol upgrade</span>
                         <span className="animate-pulse ml-1">|</span>
                       </div>
                     </div>
@@ -161,7 +161,7 @@ export default function Hero() {
                   <div className="mt-4 pl-4 text-gray-300">
                     <div className="text-purple-400 mb-1">» AI Response:</div>
                     <div className="pl-2 text-sm">
-                      <p>The latest Base protocol upgrade improved transaction throughput by 35% and reduced gas fees by implementing optimized batch processing. Key changes include:</p>
+                      <p>The latest Celo protocol upgrade improved transaction throughput by 35% and reduced gas fees by implementing optimized batch processing. Key changes include:</p>
                       <ul className="list-disc pl-5 mt-2 space-y-1 text-gray-400">
                         <li>Enhanced data availability layer</li>
                         <li>New smart contract optimization engine</li>
@@ -171,7 +171,7 @@ export default function Hero() {
                     </div>
                   </div>
                   <div className="mt-6">
-                    <div className="text-green-400">$ baseindexer --query "token transfers above 100K USD in last 24h"</div>
+                    <div className="text-green-400">$ celoindexer --query "token transfers above 100K USD in last 24h"</div>
                     <div className="mt-2 pl-4 font-mono text-xs">
                       <div className="text-gray-400">Processing query...</div>
                       <div className="text-white mt-1">Found 37 transfers matching criteria</div>
