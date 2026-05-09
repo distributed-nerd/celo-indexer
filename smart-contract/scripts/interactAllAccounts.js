@@ -83,6 +83,7 @@ async function main() {
       const randomAction = Math.random();
       
       // 70% chance of transfer if tokens available
+      // 70% chance of transfer if tokens available
       if (tokenBalance > 0n && randomAction < 0.7) {
         // TRANSFER: Send tokens to another random account
         const receiver = getRandom(accounts.filter(a => a.address !== account.address));
