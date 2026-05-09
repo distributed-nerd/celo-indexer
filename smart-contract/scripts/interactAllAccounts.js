@@ -52,6 +52,7 @@ async function main() {
   const totalAccounts = accounts.length;
   
   // Process each account sequentially
+  // Process each account sequentially
   // Each account performs one transaction
   for (let i = 0; i < totalAccounts; i++) {
     const account = accounts[i];
