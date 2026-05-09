@@ -72,6 +72,7 @@ async function main() {
         continue;
       }
       
+      // Create wallet instance for this account
       const wallet = new hre.ethers.Wallet(account.privateKey, hre.ethers.provider);
       const tokenWithSigner = token.connect(wallet);
       
