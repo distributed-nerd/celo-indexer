@@ -46,10 +46,12 @@ async function main() {
   console.log(`Expected cost per tx: ~${hre.ethers.formatEther(gasPrice * gasLimit)} CELO\n`);
   
   // Initialize counters for tracking results
+  // Initialize counters for tracking results
   let successCount = 0;
   let failCount = 0;
   const totalAccounts = accounts.length;
   
+  // Process each account sequentially
   // Each account performs one transaction
   for (let i = 0; i < totalAccounts; i++) {
     const account = accounts[i];
