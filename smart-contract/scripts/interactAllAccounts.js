@@ -65,6 +65,7 @@ async function main() {
       const tokenBalance = await token.balanceOf(account.address);
       
       // Skip if insufficient CELO for gas
+      // Skip if insufficient CELO for gas
       if (balance < TARGET_GAS_COST) {
         console.log(`[${i + 1}/${totalAccounts}] Account #${account.index} - Insufficient CELO (has ${hre.ethers.formatEther(balance)})`);
         failCount++;
