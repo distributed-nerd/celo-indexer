@@ -45,6 +45,7 @@ async function main() {
   console.log(`Calculated gas limit: ${gasLimit.toString()}`);
   console.log(`Expected cost per tx: ~${hre.ethers.formatEther(gasPrice * gasLimit)} CELO\n`);
   
+  // Initialize counters for tracking results
   let successCount = 0;
   let failCount = 0;
   const totalAccounts = accounts.length;
