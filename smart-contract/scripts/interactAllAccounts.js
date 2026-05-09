@@ -36,6 +36,8 @@ async function main() {
   // Calculate optimal gas limit for target cost
   // Calculate gas limit to achieve ~0.04 CELO cost
   // gasLimit = targetCost / gasPrice
+  // Calculate optimal gas limit for target cost
+  // Formula: gasLimit = targetCost / gasPrice
   const calculatedGasLimit = TARGET_GAS_COST / gasPrice;
   const gasLimit = BigInt(Math.floor(Number(calculatedGasLimit)));
   
