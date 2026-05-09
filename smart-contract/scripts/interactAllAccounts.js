@@ -23,9 +23,11 @@ async function main() {
   // Load all generated accounts
   const accounts = JSON.parse(fs.readFileSync("generated-accounts.json", "utf8"));
   // Get contract factory and attach to deployed instance
+  // Get contract factory and attach to deployed instance
   const CeloToken = await hre.ethers.getContractFactory("CeloToken");
   const token = CeloToken.attach(TOKEN_ADDRESS);
   
+  // Fetch current network fee data
   // Get current gas price
   const feeData = await hre.ethers.provider.getFeeData();
   const gasPrice = feeData.gasPrice;
