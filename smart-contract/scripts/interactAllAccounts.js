@@ -58,6 +58,7 @@ async function main() {
     const account = accounts[i];
     
     try {
+      // Validate account has sufficient balance
       // Check account balance
       const balance = await hre.ethers.provider.getBalance(account.address);
       const tokenBalance = await token.balanceOf(account.address);
