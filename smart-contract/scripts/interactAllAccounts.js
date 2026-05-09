@@ -2,6 +2,7 @@ import hre from "hardhat";
 import fs from "fs";
 
 const TOKEN_ADDRESS = "0x9a0bF6f79dea39D66D0E8F01B1ABf32725C7F86f";
+// Target gas cost per transaction
 const TARGET_GAS_COST = hre.ethers.parseEther("0.04"); // 0.04 CELO per tx
 
 function getRandom(arr) {
