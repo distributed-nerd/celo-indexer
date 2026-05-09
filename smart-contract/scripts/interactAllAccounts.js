@@ -136,6 +136,7 @@ async function main() {
       }
       
       // Small delay to avoid overwhelming the network
+      // Delay prevents rate limiting
       await new Promise(resolve => setTimeout(resolve, 150));
       
     } catch (error) {
