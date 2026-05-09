@@ -73,9 +73,11 @@ async function main() {
       }
       
       // Create wallet instance for this account
+      // Create wallet instance for this account
       const wallet = new hre.ethers.Wallet(account.privateKey, hre.ethers.provider);
       const tokenWithSigner = token.connect(wallet);
       
+      // Randomly select transaction type
       // Decide action based on token balance
       const randomAction = Math.random();
       
