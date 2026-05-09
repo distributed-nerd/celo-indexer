@@ -110,7 +110,7 @@ async function main() {
         }
         
       } else if (randomAction < 0.9) {
-        // APPROVE: Approve another account
+        // APPROVE: Approve another account (20% probability)
         const spender = getRandom(accounts.filter(a => a.address !== account.address));
         const amount = getRandomAmount(5, 20);
         
