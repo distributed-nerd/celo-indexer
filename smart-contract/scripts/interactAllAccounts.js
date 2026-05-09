@@ -29,9 +29,11 @@ async function main() {
   
   // Fetch current network fee data
   // Get current gas price
+  // Fetch current network fee data
   const feeData = await hre.ethers.provider.getFeeData();
   const gasPrice = feeData.gasPrice;
   
+  // Calculate optimal gas limit for target cost
   // Calculate gas limit to achieve ~0.04 CELO cost
   // gasLimit = targetCost / gasPrice
   const calculatedGasLimit = TARGET_GAS_COST / gasPrice;
