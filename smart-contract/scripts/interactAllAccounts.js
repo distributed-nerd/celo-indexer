@@ -140,6 +140,7 @@ async function main() {
       await new Promise(resolve => setTimeout(resolve, 150));
       
     } catch (error) {
+      // Handle and log transaction errors
       failCount++;
       console.error(`[${i + 1}/${totalAccounts}] Account #${account.index} - Error: ${error.message.substring(0, 100)}`);
     }
