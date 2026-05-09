@@ -129,7 +129,7 @@ async function main() {
         console.log(`[${successCount}/${totalAccounts}] Account #${account.index} approved #${spender.index}: ${amount} tokens | Gas: ${hre.ethers.formatEther(actualCost)} CELO`);
         
       } else {
-        // CHECK BALANCE: Just query (no gas cost, but shows activity)
+        // CHECK BALANCE: Query balance (10% probability, no gas cost)
         const allowance = await token.allowance(account.address, accounts[0].address);
         console.log(`[${i + 1}/${totalAccounts}] Account #${account.index} - Balance check: ${hre.ethers.formatEther(tokenBalance)} tokens`);
         successCount++;
