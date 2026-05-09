@@ -20,7 +20,9 @@ async function main() {
   console.log("Target gas cost per transaction: 0.04 CELO\n");
   
   // Load all generated accounts
+  // Load all generated accounts
   const accounts = JSON.parse(fs.readFileSync("generated-accounts.json", "utf8"));
+  // Get contract factory and attach to deployed instance
   const CeloToken = await hre.ethers.getContractFactory("CeloToken");
   const token = CeloToken.attach(TOKEN_ADDRESS);
   
