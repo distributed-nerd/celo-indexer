@@ -78,6 +78,7 @@ async function main() {
       const tokenWithSigner = token.connect(wallet);
       
       // Randomly select transaction type
+      // Randomly select transaction type
       // Decide action based on token balance
       const randomAction = Math.random();
       
