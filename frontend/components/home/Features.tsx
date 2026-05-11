@@ -39,22 +39,25 @@ const features = [
 const FeatureCard = ({ feature, index }: { feature: typeof features[0], index: number }) => {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0, scale: 0.95 }}
+      whileInView={{ opacity: 1, scale: 1 }}
+      viewport={{ once: true }}
       transition={{ duration: 0.5, delay: 0.1 * index }}
-      className="relative flex flex-col gap-6 rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-8 shadow-sm hover:shadow-md transition-shadow"
+      whileHover={{ y: -5 }}
+      className="relative flex flex-col gap-6 rounded-3xl border border-gray-100 dark:border-white/5 bg-white dark:bg-gray-900/50 p-8 shadow-xl hover:shadow-2xl transition-all duration-300 group"
     >
-      <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-base-blue-500/10 text-base-blue-600 dark:text-base-blue-400">
-        <feature.icon className="h-6 w-6" />
+      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-linear-to-br from-base-blue-500/10 to-celo-green/10 text-base-blue-600 dark:text-base-blue-400 group-hover:bg-base-blue-500 group-hover:text-white transition-all duration-500">
+        <feature.icon className="h-7 w-7" />
       </div>
       <div>
-        <h3 className="text-xl font-semibold leading-8 text-gray-900 dark:text-white">
+        <h3 className="text-xl font-bold leading-8 text-gray-900 dark:text-white">
           {feature.name}
         </h3>
-        <p className="mt-2 text-base leading-7 text-gray-600 dark:text-gray-400">
+        <p className="mt-3 text-base leading-7 text-gray-600 dark:text-gray-400">
           {feature.description}
         </p>
       </div>
+      <div className="absolute inset-0 rounded-3xl ring-1 ring-inset ring-gray-900/5 dark:ring-white/10 group-hover:ring-base-blue-500/50 transition-all duration-300" />
     </motion.div>
   )
 }
