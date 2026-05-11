@@ -33,14 +33,16 @@ export default function Navbar() {
   }
 
   return (
-    <header className="relative z-50 bg-white dark:bg-slate-900 shadow-sm">
+    <header className="sticky top-0 z-50 glass">
       <nav className="mx-auto flex max-w-7xl items-center justify-between p-4 lg:px-8" aria-label="Global">
         <div className="flex lg:flex-1">
-          <Link href="/" className="-m-1.5 p-1.5 flex items-center gap-2">
-            <span className="h-8 w-8 rounded-full bg-base-blue-600 flex items-center justify-center">
+          <Link href="/" className="-m-1.5 p-1.5 flex items-center gap-2 group">
+            <span className="h-8 w-8 rounded-full bg-linear-to-br from-base-blue-500 to-celo-green flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
               <span className="text-white font-bold">C</span>
             </span>
-            <span className="text-xl font-semibold text-base-blue-800 dark:text-white">CeloIndexer</span>
+            <span className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">
+              Celo<span className="text-base-blue-500">Indexer</span>
+            </span>
           </Link>
         </div>
         
