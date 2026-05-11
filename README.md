@@ -1,102 +1,50 @@
-# Indexa – ERC-20 Token Transfer Indexer
-**Indexa** is a backend indexing service that connects directly to the **Base blockchain** and indexes **real on-chain ERC-20 token transfer data** into a PostgreSQL database.  
-It listens to live events (and historical blocks) from the Base network and stores verified blockchain data exactly as it exists on-chain.
+# Celo Indexer – Premium Blockchain Exploration
 
-Indexa also includes an **AI-powered natural language interface**, allowing users to control indexing behavior using simple human-readable commands—without writing SQL queries or modifying code.
+**Celo Indexer** is a premium, AI-powered indexing service that provides real-time visibility into the Celo blockchain. It combines high-performance data processing with a stunning glassmorphism interface and intelligent AI-driven insights.
 
+## 🚀 Key Modern Features
 
-## 🚀 Features
+- **Premium UI/UX:** A state-of-the-art dashboard featuring glassmorphism, smooth animations, and a responsive design system.
+- **AI-Powered Insights:** 
+  - **Natural Language Querying:** Search for transactions using human-readable language.
+  - **AI Explainer:** Get intelligent, easy-to-understand summaries of complex smart contract interactions.
+  - **Gas Predictor:** AI-assisted forecasting for optimal transaction timing.
+- **Advanced Data Visualizations:** 
+  - Real-time transaction volume tracking.
+  - Historical gas price trends.
+  - Account activity distribution analysis.
+- **Enhanced Address Details:** 
+  - High-performance transaction timelines.
+  - Historical asset value charts.
+  - Personalized address tagging system.
 
-- Indexes real-time ERC-20 Transfer events from the Ethereum blockchain
-
-- Stores from, to, and value fields into a PostgreSQL database
-
-- Supports natural language queries via AI for flexible indexing
-
-- Users can issue commands like:
-
-    - Index transfers for this address
-
-    - Only index the from and value fields
-    - Index this particular address from block 2000000
-
-No need to write raw queries or modify code to change indexing target
-
-## 📁 Folder Structure
-```
-backend/
-├── env.sample               # Sample environment variables
-├── node_modules/            # Installed dependencies
-├── package.json             # Project metadata and scripts
-├── package-lock.json        # Locked dependency versions
-├── tsconfig.json            # TypeScript configuration
-├── src/                     # Source code
-│   ├── config/              # DB and blockchain config (e.g., Sequelize, provider)
-│   ├── models/              # Sequelize models (e.g., Transfer.ts)
-│   ├── migrations/          # Sequelize migration files
-│   ├── services/            # Logic for indexing, saving to DB
-│   ├── utils/               # Helper functions
-│   └── index.ts             # App entry point
+## 📁 Project Structure
 
 ```
-
-
----
+.
+├── frontend/             # Next.js / React Modern Dashboard
+├── smart-contract/       # Simulation Engine & Blockchain Logic
+└── backend/              # Core Indexing Service (Node.js/PostgreSQL)
+```
 
 ## ⚙️ Getting Started
 
-### 1. Clone the Repository
+### 1. Configure Environment
+Modernize your environment by following the `env.sample` in the respective directories.
 
+### 2. Launching the Dashboard
 ```bash
-git clone https://github.com/dimka90/indexer.git
-cd backend
-```
-
-2. Configure Environment Variables
-Copy the sample .env and configure it:
-```
-cp env.sample .env
-```
-
-Update .env with your credentials:
-```
-INFURA_URL=https://mainnet.infura.io/v3/YOUR_INFURA_KEY
-DB_HOST=localhost
-DB_USER=your_user
-DB_PASSWORD=your_password
-DB_NAME=indexa_db
-DB_PORT=5432
-OPEN_AI_KEY=
-```
-
-3. Install Dependencies
-```
+cd frontend
 npm install
+npm run dev
 ```
 
-4. Create the Database
-Make sure PostgreSQL is running, then 
-```
-create your database:
-```
+## 🔧 Technology Stack
 
-5. Run Migrations
-Apply your database schema:
-```
-npx sequelize-cli db:migrate
-```
-6. Start the Indexer
-```
-npm run start
-```
+- **Frontend:** Next.js 15, TypeScript, Tailwind CSS, Framer Motion, Recharts, Lucide-react.
+- **AI Integration:** OpenAI SDK, Vercel AI SDK.
+- **Blockchain:** Celo Core, Ethers.js, Web3.js.
+- **Data Persistence:** PostgreSQL, Sequelize ORM.
 
-🔧 Technologies Used
-
-1. Node.js
-2. TypeScript
-3. PostgreSQL
-4. Sequelize ORM
-5. Web3.js
-6. dotenv
-
-
+---
+*Built for the future of Celo.*
