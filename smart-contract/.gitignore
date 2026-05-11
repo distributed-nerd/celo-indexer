@@ -1,0 +1,22 @@
+node_modules
+.env
+generated-accounts.json
+coverage
+coverage.json
+typechain
+typechain-types
+
+# Hardhat files
+cache
+artifacts
+.vscode_hardhat_config_*.ts
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
