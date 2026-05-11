@@ -15,98 +15,78 @@ export default function Hero() {
   }
 
   return (
-    <div className="relative isolate overflow-hidden bg-white dark:bg-slate-900">
-      {/* Background gradient */}
+    <div className="relative isolate overflow-hidden bg-white dark:bg-slate-900 border-b border-gray-100 dark:border-slate-800">
+      {/* Dynamic Background gradient */}
       <div className="absolute inset-x-0 top-[-10rem] -z-10 transform-gpu overflow-hidden blur-3xl sm:top-[-20rem]">
-        <svg
-          className="relative left-[calc(50%-11rem)] -z-10 h-[21.1875rem] max-w-none -translate-x-1/2 rotate-[30deg] sm:left-[calc(50%-30rem)] sm:h-[42.375rem]"
-          viewBox="0 0 1155 678"
-        >
-          <path
-            fill="url(#45de2b6b-92d5-4d68-a6a0-9b9b2abad533)"
-            fillOpacity=".3"
-            d="M317.219 518.975L203.852 678 0 438.341l317.219 80.634 204.172-286.402c1.307 132.337 45.083 346.658 209.733 145.248C936.936 126.058 882.053-94.234 1031.02 41.331c119.18 108.451 130.68 295.337 121.53 375.223L855 299l21.173 362.054-558.954-142.079z"
-          />
-          <defs>
-            <linearGradient
-              id="45de2b6b-92d5-4d68-a6a0-9b9b2abad533"
-              x1="1155.49"
-              x2="-78.208"
-              y1=".177"
-              y2="474.645"
-              gradientUnits="userSpaceOnUse"
-            >
-              <stop stopColor="#9089FC" />
-              <stop offset={1} stopColor="#FF80B5" />
-            </linearGradient>
-          </defs>
-        </svg>
+        <div 
+          className="relative left-[calc(50%-11rem)] -z-10 aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-linear-to-tr from-[#fbbf24] to-[#35d07f] opacity-20 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]"
+          style={{
+            clipPath: 'polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)'
+          }}
+        />
       </div>
 
       <div className="mx-auto max-w-7xl px-6 pb-24 pt-10 sm:pb-32 lg:flex lg:px-8 lg:py-40">
         <div className="mx-auto max-w-2xl lg:mx-0 lg:max-w-xl lg:flex-shrink-0 lg:pt-8">
           <div className="mt-24 sm:mt-32 lg:mt-16">
             <motion.div 
-              className="inline-flex space-x-6"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+              className="inline-flex items-center space-x-2 rounded-full glass px-3 py-1 text-sm font-medium leading-6 text-gray-900 dark:text-gray-100 ring-1 ring-inset ring-gray-900/10 dark:ring-white/10"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5 }}
             >
-              <span className="rounded-full bg-base-blue-500/10 px-3 py-1 text-sm font-semibold leading-6 text-base-blue-600 dark:text-base-blue-400 ring-1 ring-inset ring-base-blue-500/20">
-                Celo Hackathon 2025
+              <span className="rounded-full bg-base-blue-500 px-2 py-0.5 text-xs font-semibold text-white">
+                New
               </span>
-              <span className="inline-flex items-center space-x-2 text-sm font-medium leading-6 text-gray-600 dark:text-gray-400">
-                <span>Built for Celo</span>
-                <ArrowRight className="h-4 w-4" />
-              </span>
+              <span>Celo Indexer v2.0 is live</span>
+              <ArrowRight className="h-4 w-4 text-gray-400" />
             </motion.div>
           </div>
           <motion.h1 
-            className="mt-10 text-4xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-6xl"
+            className="mt-10 text-4xl font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-6xl"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
           >
-            <span className="text-base-blue-600 dark:text-base-blue-400">AI-Powered</span> Blockchain Indexer
+            Explore Celo with <span className="text-gradient">AI Power</span>
           </motion.h1>
           <motion.p 
-            className="mt-6 text-lg leading-8 text-gray-600 dark:text-gray-400"
+            className="mt-6 text-lg font-medium leading-8 text-gray-600 dark:text-gray-400"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
           >
-            Explore the Celo blockchain with our advanced indexer enhanced with AI capabilities.
-            Query blockchain data using natural language, visualize network activity, and unlock
-            deeper insights with intelligent analysis.
+            The fastest, most intelligent way to query and visualize the Celo blockchain. 
+            Search transactions, blocks, and addresses with natural language.
           </motion.p>
-          <div className="mt-10 flex items-center gap-x-6">
+          <div className="mt-10 flex flex-col sm:flex-row items-center gap-4">
             <motion.div 
-              className="w-full sm:w-auto"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.6 }}
+              className="w-full sm:w-auto flex-1"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
             >
-              <form onSubmit={handleSearch} className="relative">
+              <form onSubmit={handleSearch} className="relative group">
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search by tx hash, address, or block..."
-                  className="rounded-full py-3 px-4 pl-12 w-full sm:w-80 bg-gray-100 dark:bg-slate-800 border-none shadow-sm focus:ring-2 focus:ring-base-blue-500"
+                  placeholder="Search tx, address, or block..."
+                  className="rounded-2xl py-4 px-4 pl-12 w-full glass focus:ring-2 focus:ring-base-blue-500 shadow-xl transition-all duration-300"
                 />
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-base-blue-500 transition-colors" />
               </form>
             </motion.div>
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.8 }}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
             >
               <Link
                 href="/indexer"
-                className="rounded-full bg-base-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-base-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-base-blue-600"
+                className="w-full sm:w-auto inline-flex justify-center rounded-2xl bg-base-blue-600 px-8 py-4 text-sm font-bold text-white shadow-lg hover:bg-base-blue-500 hover:scale-105 transition-all duration-300"
               >
-                Launch Explorer
+                Launch App
               </Link>
             </motion.div>
           </div>
