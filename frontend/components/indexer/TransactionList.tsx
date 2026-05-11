@@ -1,130 +1,59 @@
+'use client'
+
 import React from 'react';
-import Link from 'next/link';
-import { createColumnHelper, ColumnDef } from '@tanstack/react-table';
-import DataTable from './DataTable';
-import { formatDistanceToNow } from 'date-fns';
-import { CheckCircle, XCircle, Clock } from 'lucide-react';
-import { Transaction } from '@/hooks/useBlockchainData';
+import { motion } from 'framer-motion';
+import { ArrowUpRight, ArrowDownLeft, Hash, Clock, Coins } from 'lucide-react';
 
-interface TransactionListProps {
-  transactions: Transaction[];
-  showPagination?: boolean;
-  showAll?: boolean;
-}
+const mockTxs = [
+  { hash: '0x123...abc', from: '0xabc...123', to: '0xdef...456', value: '1.25', time: '12s ago', status: 'success' },
+  { hash: '0x456...def', from: '0xdef...456', to: '0xghi...789', value: '45.00', time: '45s ago', status: 'success' },
+  { hash: '0x789...ghi', from: '0xghi...789', to: '0xabc...123', value: '0.05', time: '1m ago', status: 'pending' },
+  { hash: '0xabc...123', from: '0x123...abc', to: '0xdef...456', value: '10.50', time: '3m ago', status: 'failed' },
+];
 
-const formatAddress = (address: string) => {
-  if (!address) return 'Unknown';
-  return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
-};
-
-const formatValue = (value: string) => {
-  if (!value) return '0';
-  try {
-    const numValue = parseFloat(value);
-    return numValue.toFixed(4);
-  } catch (error) {
-    console.error('Error formatting value:', error);
-    return '0';
-  }
-};
-
-const TransactionList: React.FC<TransactionListProps> = ({ 
-  transactions,
-  showPagination = true,
-  showAll = false 
-}) => {
-  const columnHelper = createColumnHelper<Transaction>();
-  
-  const columns = [
-    columnHelper.accessor('id', {
-      header: 'ID',
-      cell: info => info.getValue(),
-    }),
-    columnHelper.accessor('from', {
-      header: 'From',
-      cell: info => (
-        <Link 
-          href={`/address/${info.getValue()}`}
-          className="text-blue-600 hover:text-blue-800"
-        >
-          {formatAddress(info.getValue())}
-        </Link>
-      ),
-    }),
-    columnHelper.accessor('to', {
-      header: 'To',
-      cell: info => (
-        <Link 
-          href={`/address/${info.getValue()}`}
-          className="text-blue-600 hover:text-blue-800"
-        >
-          {formatAddress(info.getValue())}
-        </Link>
-      ),
-    }),
-    columnHelper.accessor('value', {
-      header: 'Value',
-      cell: info => formatValue(info.getValue()),
-    }),
-    columnHelper.accessor('tokenAddress', {
-      header: 'Token',
-      // Only show token address if it exists
-      cell: info => info.getValue() ? formatAddress(info.getValue() as string) : '-',
-    }),
-    columnHelper.accessor('blockNumber', {
-      header: 'Block',
-      cell: info => info.getValue() ? (
-        <Link 
-          href={`/block/${info.getValue()}`}
-          className="text-blue-600 hover:text-blue-800"
-        >
-          {info.getValue()}
-        </Link>
-      ) : '-',
-    }),
-    columnHelper.accessor('timestamp', {
-      header: 'Time',
-      cell: info => formatDistanceToNow(new Date(info.getValue()), { addSuffix: true }),
-    }),
-    columnHelper.accessor('status', {
-      header: 'Status',
-      cell: info => {
-        const status = info.getValue();
-        return (
-          <div className="flex items-center">
-            {status === 'success' && <CheckCircle className="h-4 w-4 text-green-500 mr-1" />}
-            {status === 'failed' && <XCircle className="h-4 w-4 text-red-500 mr-1" />}
-            {status === 'pending' && <Clock className="h-4 w-4 text-yellow-500 mr-1" />}
-            <span className={`text-xs ${
-              status === 'success' ? 'text-green-500' : 
-              status === 'failed' ? 'text-red-500' : 'text-yellow-500'
-            }`}>
-              {status || 'Success'}
-            </span>
-          </div>
-        );
-      },
-    }),
-  ];
-  
-  
-  const displayedColumns: ColumnDef<Transaction>[] = showAll ? (columns as ColumnDef<Transaction>[]) : ([
-    columns[1], 
-    columns[2], 
-    columns[3], 
-    columns[6], 
-    columns[7], 
-  ] as ColumnDef<Transaction>[]);
-  
+export default function TransactionList() {
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-md overflow-hidden">
-      <DataTable 
-        data={transactions}
-        columns={displayedColumns}
-        pagination={showPagination}
-      />
+    <div className="space-y-3">
+      {mockTxs.map((tx, idx) => (
+        <motion.div
+          key={tx.hash}
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: idx * 0.05 }}
+          className="glass rounded-2xl border border-white/5 p-4 flex items-center justify-between hover:bg-white/5 transition-all group"
+        >
+          <div className="flex items-center gap-4">
+            <div className={`h-10 w-10 rounded-xl flex items-center justify-center border border-white/5 ${
+              tx.status === 'success' ? 'bg-green-500/10 text-green-500' : 
+              tx.status === 'pending' ? 'bg-blue-500/10 text-blue-500 animate-pulse' : 
+              'bg-red-500/10 text-red-500'
+            }`}>
+              {tx.value > '5' ? <ArrowUpRight className="h-5 w-5" /> : <ArrowDownLeft className="h-5 w-5" />}
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-bold text-gray-900 dark:text-white font-mono">{tx.hash}</span>
+                <div className={`h-1.5 w-1.5 rounded-full ${
+                  tx.status === 'success' ? 'bg-green-500' : 
+                  tx.status === 'pending' ? 'bg-blue-500' : 
+                  'bg-red-500'
+                }`} />
+              </div>
+              <div className="flex items-center gap-4 text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">
+                <span className="flex items-center gap-1"><Hash className="h-3 w-3" /> From {tx.from}</span>
+                <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {tx.time}</span>
+              </div>
+            </div>
+          </div>
+          <div className="text-right">
+            <div className="flex items-center gap-2 justify-end">
+              <span className="text-sm font-bold text-gray-900 dark:text-white">{tx.value}</span>
+              <Coins className="h-4 w-4 text-celo-green" />
+            </div>
+            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter mt-1">CELO Balance</p>
+          </div>
+        </motion.div>
+      ))}
     </div>
   );
-};
-
-export default TransactionList;
+}
