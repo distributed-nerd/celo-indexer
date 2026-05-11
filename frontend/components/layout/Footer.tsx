@@ -56,22 +56,30 @@ export default function Footer() {
         Footer
       </h2>
       <div className="mx-auto max-w-7xl px-6 pb-8 pt-16 sm:pt-24 lg:px-8">
-        <div className="xl:grid xl:grid-cols-3 xl:gap-8">
+        <div className="xl:grid xl:grid-cols-3 xl:gap-12">
           <div className="space-y-8">
-            <div className="flex items-center gap-2">
-              <span className="h-8 w-8 rounded-full bg-base-blue-600 flex items-center justify-center">
-                <span className="text-white font-bold">C</span>
+            <div className="flex items-center gap-2 group">
+              <span className="h-10 w-10 rounded-full bg-linear-to-br from-base-blue-500 to-celo-green flex items-center justify-center shadow-lg group-hover:rotate-12 transition-transform duration-300">
+                <span className="text-white font-bold text-lg">C</span>
               </span>
-              <span className="text-xl font-semibold text-base-blue-800 dark:text-white">CeloIndexer</span>
+              <span className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
+                Celo<span className="text-base-blue-500">Indexer</span>
+              </span>
             </div>
-            <p className="text-sm leading-6 text-gray-600 dark:text-gray-400">
-              The most advanced indexer for Celo blockchain with integrated AI tooling.
+            <p className="text-base leading-7 text-gray-600 dark:text-gray-400 max-w-sm">
+              Empowering the Celo ecosystem with high-performance indexing and 
+              <span className="font-semibold text-base-blue-500"> AI-driven </span> 
+              blockchain insights.
             </p>
-            <div className="flex space-x-6">
+            <div className="flex space-x-5">
               {navigation.social.map((item) => (
-                <a key={item.name} href={item.href} className="text-gray-500 hover:text-base-blue-600 dark:text-gray-400 dark:hover:text-base-blue-400">
+                <a 
+                  key={item.name} 
+                  href={item.href} 
+                  className="p-2 rounded-full glass hover:bg-base-blue-500/10 dark:hover:bg-base-blue-500/20 text-gray-500 hover:text-base-blue-600 dark:text-gray-400 dark:hover:text-base-blue-400 transition-all duration-300"
+                >
                   <span className="sr-only">{item.name}</span>
-                  <item.icon className="h-6 w-6" aria-hidden="true" />
+                  <item.icon className="h-5 w-5" aria-hidden="true" />
                 </a>
               ))}
             </div>
